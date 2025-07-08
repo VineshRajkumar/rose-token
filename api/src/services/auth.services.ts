@@ -1,8 +1,6 @@
 
-import { emitWarning } from "process";
 import { hashedPassword, verifyPassword } from "../utils/hash";
 import prisma from "./prisma";
-import { verify } from "crypto";
 
 interface SignupInput {
   name: string;
