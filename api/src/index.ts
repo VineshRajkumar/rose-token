@@ -15,6 +15,8 @@ const server = http.createServer(app);
 const PORT = 3000 ;
 
 app.use(cookieParser()); 
+app.use(express.json())
+app.use(express.urlencoded())  
 
 app.use("/",authRoutes);
 app.use("/", userRoutes);
