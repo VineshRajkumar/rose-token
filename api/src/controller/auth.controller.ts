@@ -27,7 +27,7 @@ export const signup = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Signup Error:", error);
         res.status(500).json({
-            message: "Something went wrong during signup",
+            message: error,
         });
     }
 };
@@ -57,7 +57,7 @@ export const login = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("login Error:", error);
         res.status(500).json({
-            message: "Something went wrong during login",
+            message: error,
         });
     }
 };
