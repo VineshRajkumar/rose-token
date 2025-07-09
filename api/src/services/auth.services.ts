@@ -1,18 +1,35 @@
 import { hashedPassword, verifyPassword } from "../utils/hash";
 import prisma from "./prisma";
+import { z } from "zod";
 
-interface SignupInput {
-  name: string;
-  email: string;
-  username: string;
-  password: string;
-}
 
+
+export const signupSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Password is required"),
+});
+
+type SignupInput = z.infer<typeof signupSchema>;
+type LoginInput=z.infer<typeof loginSchema>;
 
 export const signup = async (data:SignupInput)=>{
+ const parsed = signupSchema.safeParse(data);
 
-    const {name,email,username,password}=data;
-    
+
+     if (!parsed.success) {
+    const errors = parsed.error.flatten().fieldErrors;
+    throw new Error(`Validation Error: ${JSON.stringify(errors)}`);
+  }
+
+    const {name,email,username,password}=parsed.data;
+
     const existingUser= await prisma.user.findFirst({
         where:{OR:[{email},{username}]},
     });
@@ -41,7 +58,17 @@ const user = await prisma.user.create(
 return user;
 };
 
-export const login = async ({email,password}:{email:string,password:string})=>{
+export const login = async (data:LoginInput)=>{
+
+  const parsed=loginSchema.safeParse(data);
+
+  
+ if (!parsed.success) {
+    const errors = parsed.error.flatten().fieldErrors;
+    throw new Error(`Validation error: ${JSON.stringify(errors)}`);
+  }
+
+const { email, password } = parsed.data;
 
     const user= await prisma.user.findUnique({where:{email}});
 
