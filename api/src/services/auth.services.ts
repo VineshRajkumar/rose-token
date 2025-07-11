@@ -1,4 +1,5 @@
 
+import { ApiError } from "../utils/ApiError";
 import { hashedPassword, verifyPassword } from "../utils/hash";
 import prisma from "./prisma";
 import { z } from "zod";
@@ -25,8 +26,8 @@ export const signup = async (data:SignupInput)=>{
 
 
      if (!parsed.success) {
-    const errors = parsed.error.flatten().fieldErrors;
-    throw new Error(`Validation Error: ${JSON.stringify(errors)}`);
+    const errors = parsed.error.flatten();
+    throw new ApiError(400,"Email or Password is not valid", [JSON.stringify(errors)]);
   }
 
     const {name,email,username,password}=parsed.data;
@@ -36,7 +37,7 @@ export const signup = async (data:SignupInput)=>{
     });
 
     if(existingUser){
-        throw new Error("Email or username already in use");
+        throw new ApiError(409,"Email already in use");
     }
 
   
@@ -66,7 +67,8 @@ export const login = async (data:LoginInput)=>{
   
  if (!parsed.success) {
     const errors = parsed.error.flatten().fieldErrors;
-    throw new Error(`Validation error: ${JSON.stringify(errors)}`);
+  
+     throw new ApiError(400,"Email or Password is not valid", [JSON.stringify(errors)]);
   }
 
 const { email, password } = parsed.data;
@@ -74,13 +76,13 @@ const { email, password } = parsed.data;
     const user= await prisma.user.findUnique({where:{email}});
 
   if (!user) {
-    throw new Error("User not found");
+      throw new ApiError(401,"Invalid email or password");
   }
 
   const isValid = await verifyPassword(user.password, password);
 
   if (!isValid) {
-    throw new Error("Invalid password");
+    throw new ApiError(401,"Invalid email or password");
   }
 
   return user;
